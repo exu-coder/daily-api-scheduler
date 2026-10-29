@@ -186,7 +186,7 @@ function Index() {
   );
 }
 
-function Stat({ label, value, color }: { label: string; value?: number; color: string }) {
+function Stat({ label, value, color }: { label: string; value?: number | undefined; color: string }) {
   return (
     <div className="bg-background p-8 md:p-12">
       <p className="text-sm uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
