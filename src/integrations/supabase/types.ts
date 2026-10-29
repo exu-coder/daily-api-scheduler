@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      scheduled_requests: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          last_result: Json | null
+          last_run_at: string | null
+          last_status: number | null
+          name: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_result?: Json | null
+          last_run_at?: string | null
+          last_status?: number | null
+          name?: string
+          url: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_result?: Json | null
+          last_run_at?: string | null
+          last_status?: number | null
+          name?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
