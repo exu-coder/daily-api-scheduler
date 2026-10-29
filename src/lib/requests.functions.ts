@@ -1,25 +1,36 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { callLike, isValidUid } from "./like-api";
 
-export const runNow = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((i: { id: string }) => i)
-  .handler(async ({ data, context }) => {
-    const { data: row } = await context.supabase
-      .from("scheduled_requests").select("id, url").eq("id", data.id).single();
-    if (!row) throw new Error("Not found");
-    let status = 0;
-    let result: unknown;
-    try {
-      const res = await fetch(row.url, { headers: { accept: "application/json" } });
-      status = res.status;
-      const text = await res.text();
-      try { result = JSON.parse(text); } catch { result = { raw: text.slice(0, 2000) }; }
-    } catch (e) {
-      result = { error: String(e) };
-    }
-    await context.supabase.from("scheduled_requests")
-      .update({ last_run_at: new Date().toISOString(), last_status: status, last_result: result as never })
-      .eq("id", row.id);
+const check = (i: { uid: string }) => {
+  const uid = String(i.uid ?? "").trim();
+  if (!isValidUid(uid)) throw new Error("UID must be 5–15 digits");
+  return { uid };
+};
+
+export const sendLike = createServerFn({ method: "POST" })
+  .inputValidator(check)
+  .handler(async ({ data }) => {
+    const result = await callLike(data.uid);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin
+      .from("daily_uids")
+      .upsert({ uid: data.uid, last_run_at: new Date().toISOString(), last_result: result as never });
+    return { result: JSON.stringify(result) };
+  });
+
+export const getUid = createServerFn({ method: "POST" })
+  .inputValidator(check)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
+      .from("daily_uids").select("uid, last_run_at, last_result").eq("uid", data.uid).maybeSingle();
+    return { row: row ? JSON.stringify(row) : null };
+  });
+
+export const removeUid = createServerFn({ method: "POST" })
+  .inputValidator(check)
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("daily_uids").delete().eq("uid", data.uid);
     return { ok: true };
   });
