@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_uids: {
+        Row: {
+          created_at: string
+          last_result: Json | null
+          last_run_at: string | null
+          uid: string
+        }
+        Insert: {
+          created_at?: string
+          last_result?: Json | null
+          last_run_at?: string | null
+          uid: string
+        }
+        Update: {
+          created_at?: string
+          last_result?: Json | null
+          last_run_at?: string | null
+          uid?: string
+        }
+        Relationships: []
+      }
       scheduled_requests: {
         Row: {
           created_at: string
